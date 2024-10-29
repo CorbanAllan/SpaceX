@@ -1,5 +1,4 @@
 package com.example.spacex.presentation.screens
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,10 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.spacex.CoilImage
-import com.example.spacex.R
 import com.example.spacex.data.model.Launch
 import com.example.spacex.viewmodel.LaunchViewModel
 
@@ -27,24 +24,26 @@ fun LaunchesScreen(viewModel: LaunchViewModel = viewModel()) {
     Box(modifier = Modifier.fillMaxSize().background(Color(40,40,40)).padding(16.dp)) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.height(6.dp))
             LazyColumn {
-                items(viewModel.launches) { launch ->
-                    LaunchItem(launch)
+                if(viewModel.launches.isNotEmpty()) {
+                    items(viewModel.launches) { launch -> LaunchItem(launch) }
+                }else{
+                    item{
+                        NotFoundItem("Launches Not Found")
+                    }
                 }
             }
         }
     }
-
 }
 
 @Composable
 fun LaunchItem(launch: Launch) {
     Card(
         colors = CardColors(Color(60,60,60),Color.LightGray,Color(60,60,60),Color.LightGray),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(16.dp) ,
         modifier = Modifier
             .fillMaxWidth()
@@ -76,4 +75,3 @@ fun LaunchItem(launch: Launch) {
         }
     }
 }
-

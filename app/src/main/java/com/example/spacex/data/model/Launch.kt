@@ -12,13 +12,6 @@ data class Launch(
     @SerializedName("flickr") val flickr: List<String>
 )
 
-data class LaunchResponse(
-    val name: String,
-    val date: String,
-    val details: String,
-    val links: Links
-)
-
 data class Links(
     val patch: Patch
 )

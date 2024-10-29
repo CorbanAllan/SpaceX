@@ -1,5 +1,6 @@
 package com.example.spacex.presentation.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +17,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import com.example.spacex.CoilImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.spacex.viewmodel.RocketViewModel
 import com.example.spacex.data.model.Rocket
 
@@ -26,14 +30,17 @@ fun RocketListScreen(viewModel: RocketViewModel = viewModel()) {
     Box(modifier = Modifier.fillMaxSize().background(Color(40,40,40)).padding(16.dp)) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
 
             Spacer(modifier = Modifier.height(6.dp))
-
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(rockets) { rocket ->
-                    RocketItem(rocket)
+                if(rockets.isNotEmpty()){
+                    items(rockets) { rocket -> RocketItem(rocket) }
+
+                }else{
+                    item {
+                        NotFoundItem("Rockets Not Found")
+                    }
                 }
             }
         }
@@ -47,7 +54,7 @@ fun RocketItem(rocket: Rocket) {
             containerColor = Color(60, 60, 60), // Background color of the card
             contentColor = Color.LightGray // Text color
         ),
-        shape = RoundedCornerShape(8.dp),  // Rounded corners for the card
+        shape = RoundedCornerShape(12.dp),  // Rounded corners for the card
         elevation = CardDefaults.elevatedCardElevation(16.dp),  // Elevation for shadow effect
         modifier = Modifier
             .fillMaxWidth()
@@ -56,14 +63,28 @@ fun RocketItem(rocket: Rocket) {
         Column(modifier = Modifier.fillMaxSize()) {
 
             // Image taking up the top half of the card
+
             if (rocket.flickrImages.isNotEmpty()) {
-                CoilImage(
-                    url = rocket.flickrImages[0],
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth() // Image fills the width of the card
-                        .height(150.dp) // Height for the image
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)), // Rounded top corners
-                )
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                ) {
+                    val painter = // You can add additional settings here if needed
+                        rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current)
+                                .data(data = rocket.flickrImages[0]).apply(block = fun ImageRequest.Builder.() {
+                                    // You can add additional settings here if needed
+                                }).build()
+                        )
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop // Scale the image to fill the box
+                    )
+                }
             }
 
             // Details taking up the bottom half of the card
@@ -88,5 +109,25 @@ fun RocketItem(rocket: Rocket) {
         }
     }
 }
+
+@Composable
+fun NotFoundItem(message: String){
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = Color(60, 60, 60), // Background color of the card
+            contentColor = Color.LightGray // Text color
+        ),
+        shape = RoundedCornerShape(8.dp),  // Rounded corners for the card
+        elevation = CardDefaults.elevatedCardElevation(16.dp),  // Elevation for shadow effect
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp) // Padding around the card
+    ) {
+        Text(message,modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally))
+    }
+}
+
+
+
 
 
