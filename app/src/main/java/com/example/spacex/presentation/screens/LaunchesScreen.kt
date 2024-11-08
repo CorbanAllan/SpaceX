@@ -11,6 +11,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,14 +23,15 @@ import com.example.spacex.viewmodel.LaunchViewModel
 
 @Composable
 fun LaunchesScreen(viewModel: LaunchViewModel = viewModel()) {
+    val launches by viewModel.launches.collectAsState()
     Box(modifier = Modifier.fillMaxSize().background(Color(40,40,40)).padding(16.dp)) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.height(6.dp))
             LazyColumn {
-                if(viewModel.launches.isNotEmpty()) {
-                    items(viewModel.launches) { launch -> LaunchItem(launch) }
+                if(launches.isNotEmpty()) {
+                    items(launches) { launch -> LaunchItem(launch) }
                 }else{
                     item{
                         NotFoundItem("Launches Not Found")

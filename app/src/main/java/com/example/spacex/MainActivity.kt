@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +33,7 @@ import com.example.spacex.presentation.screens.RocketListScreen
 import com.example.spacex.presentation.screens.Screen
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -51,8 +51,8 @@ class MainActivity : ComponentActivity() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .padding(start = 18.dp, top = 30.dp),
+                .height(80.dp)
+                .padding(start = 15.dp, top = 40.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start)
         {
@@ -64,26 +64,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Composable
+@Composable
     fun AppContent() {
         val navController = rememberNavController()
+
         Scaffold(
-            modifier = Modifier.background(Color(40,40,40)),
+            modifier = Modifier
+                .background(Color(40, 40, 40)), // Background color for the whole app
             topBar = { Logo() },
             bottomBar = { BottomNavigationBar(navController) }
-        ) { paddingValues -> Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(40, 40, 40)) // Set your desired background color here
-        ) {
-            Column(modifier = Modifier.padding(paddingValues)) {
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(40, 40, 40)) // Background color for the Box
+                    .padding(paddingValues) // Apply padding to avoid system UI overlap
+            ) {
+                // Main content area
                 NavHost(navController, startDestination = Screen.Home.route) {
                     composable(Screen.Home.route) { HomeScreen() }
                     composable(Screen.Rockets.route) { RocketListScreen() }
                     composable(Screen.Launches.route) { LaunchesScreen() }
                 }
             }
-        }
         }
     }
 }

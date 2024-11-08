@@ -1,16 +1,20 @@
 package com.example.spacex.viewmodel
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spacex.data.model.Launch
 import com.example.spacex.data.network.RetrofitInstance
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class LaunchViewModel : ViewModel() {
-    private val _launches = mutableStateListOf<Launch>()
-    val launches: List<Launch> get() = _launches
+    // Use StateFlow for observing the list of launches in Compose
+    private val _launches = MutableStateFlow<List<Launch>>(emptyList()) // Initially empty list
+    val launches: StateFlow<List<Launch>> = _launches // Expose as StateFlow to be observed
 
     init {
         fetchLaunches()
@@ -19,17 +23,17 @@ class LaunchViewModel : ViewModel() {
     private fun fetchLaunches() {
         viewModelScope.launch {
             try {
+                // Fetching 10 most recent launches from the SpaceX API
                 val response = RetrofitInstance.api.getLaunches()
-                _launches.addAll(response.sortedByDescending { parseDate(it.date_utc) })
+
+                val sortedLaunches = response.sortedByDescending { it.date_utc }
+                val limitedLaunches = sortedLaunches.take(10)
+                // Updating the state with the fetched launches
+                _launches.value = limitedLaunches
             } catch (e: Exception) {
-                // Handle the error
+                // Handle any errors (e.g., log it or show a message to the user)
+                Log.e("LaunchViewModel", "Error fetching launches", e)
             }
         }
     }
-
-    private fun parseDate(dateString: String): Long {
-        val formatter = DateTimeFormatter.ISO_DATE_TIME // Adjust as necessary
-        return ZonedDateTime.parse(dateString, formatter).toEpochSecond() * 1000 // Convert to milliseconds
-    }
-
 }

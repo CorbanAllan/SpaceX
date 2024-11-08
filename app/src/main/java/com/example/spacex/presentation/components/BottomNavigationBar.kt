@@ -1,6 +1,13 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.spacex.presentation.components
+import android.app.Activity
+import android.content.Context
+import android.os.Build
+import android.view.View
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,17 +21,32 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.spacex.presentation.screens.Screen
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
+
+    val context = LocalContext.current
+    val hasBottomNavBar = remember {
+        checkForBottomNavBar(context)
+    }
+
+
+    val height = if(!hasBottomNavBar){
+        125.dp
+    }else{
+        100.dp
+    }
+
     NavigationBar(
         containerColor = Color(60, 60, 60),
         tonalElevation = 8.dp,
         contentColor = Color.White,
-        modifier = Modifier.height(80.dp)
+        modifier = Modifier.height(height)
+            .navigationBarsPadding()
             .padding(6.dp) // Optional: Add padding around the nav bar
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
@@ -33,7 +55,7 @@ fun BottomNavigationBar(navController: NavController) {
         val currentRoute = navBackStackEntry.value?.destination?.route
 
         NavigationBarItem(
-            modifier = Modifier.padding(top = 25.dp),
+            modifier = Modifier.padding(10.dp),
             icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home", fontSize = 14.sp) },
             selected = currentRoute == Screen.Home.route,
@@ -47,7 +69,7 @@ fun BottomNavigationBar(navController: NavController) {
             )
         )
         NavigationBarItem(
-            modifier = Modifier.padding(top = 25.dp),
+            modifier = Modifier.padding(10.dp),
             icon = {
                 Icon(
                     imageVector = Icons.Default.Rocket,
@@ -66,7 +88,7 @@ fun BottomNavigationBar(navController: NavController) {
             )
         )
         NavigationBarItem(
-            modifier = Modifier.padding(top = 25.dp),
+            modifier = Modifier.padding(10.dp),
             icon = {
                 Icon(
                     imageVector = Icons.Default.RocketLaunch,
@@ -85,4 +107,14 @@ fun BottomNavigationBar(navController: NavController) {
             )
         )
     }
+}
+
+fun checkForBottomNavBar(context: Context): Boolean {
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val decorView = (context as Activity).window.decorView
+        val uiOptions = decorView.systemUiVisibility
+        return (uiOptions and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0
+    }
+    return false
 }
