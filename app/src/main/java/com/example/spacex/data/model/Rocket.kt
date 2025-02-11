@@ -2,6 +2,7 @@ package com.example.spacex.data.model
 
 import com.google.gson.annotations.SerializedName
 
+
 data class Rocket(
     val id: String,            // Unique identifier for the rocket
     val name: String,          // Name of the rocket
@@ -11,3 +12,4 @@ data class Rocket(
 )
 
 data class Height(val meters: Double)
+
