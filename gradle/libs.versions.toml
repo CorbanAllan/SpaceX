@@ -1,6 +1,6 @@
 [versions]
 accompanistCoil = "latest_version"
-agp = "8.6.0"
+agp = "8.10.1"
 coilCompose = "2.3.0"
 converterGson = "2.11.0"
 fresco = "2.5.0"

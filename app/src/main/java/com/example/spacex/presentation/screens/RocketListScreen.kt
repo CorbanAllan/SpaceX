@@ -1,6 +1,5 @@
 package com.example.spacex.presentation.screens
-
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,98 +14,136 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import com.example.spacex.viewmodel.RocketViewModel
-import com.example.spacex.data.model.Rocket
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
+import androidx.compose.ui.unit.sp
+import com.example.spacex.data.model.LauncherConfig
+import com.example.spacex.data.model.RocketResponse
+import com.example.spacex.loadJsonFromAssets
+import com.example.spacex.viewmodel.RocketsViewModel
+import com.google.gson.Gson
 
 @Composable
-fun RocketListScreen(viewModel: RocketViewModel = viewModel()) {
+fun RocketListScreen(
+    viewModel: RocketsViewModel = viewModel(),
+    useTestData: Boolean = false // Set this to true for mock data
+) {
+    val context = LocalContext.current
+
+    // Load test data if requested
+    val testRockets = remember(useTestData) {
+        if (useTestData) {
+            val json = loadJsonFromAssets(context, "mock_rockets.json")
+            val gson = Gson()
+            try {
+                val rocketResponse = gson.fromJson(json, RocketResponse::class.java)
+                rocketResponse?.results ?: emptyList()
+            } catch (e: Exception) {
+                Log.e("RocketParsing", "Failed to parse JSON", e)
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    // Collect real data from ViewModel
     val rockets by viewModel.rockets.collectAsState()
-    Box(modifier = Modifier.fillMaxSize().background(Color(40,40,40)).padding(16.dp)) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
 
-            Spacer(modifier = Modifier.height(6.dp))
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if(rockets.isNotEmpty()){
-                    items(rockets) { rocket -> RocketItem(rocket) }
+    // Choose which list to display
+    val rocketListToDisplay = if (useTestData) testRockets else rockets
 
-                }else{
-                    item {
-                        NotFoundItem("Rockets Not Found")
-                    }
-                }
+    if (rocketListToDisplay.isEmpty()) {
+        NotFoundItem("No rockets found")
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(40, 40, 40))
+            .padding(4.dp)
+    ) {
+        items(rocketListToDisplay) { rocket ->
+            RocketItem(rocket)
+            HorizontalDivider(
+                color = Color(70, 70, 70),
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun RocketItem(rocket: LauncherConfig) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp)
+            .background(Color(40, 40, 40))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = rocket.name + " " + rocket.variant,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            rocket.description?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.LightGray,
+                    maxLines = 3,
+                    overflow = Ellipsis
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                LandingChip(
+                    "Successful Launches: " + "${rocket.successfulLaunches ?: 0}",
+                    Color(70, 70, 70)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                LandingChip(
+                    "Failed Launches: " + "${rocket.failedLaunches ?: 0}",
+                    Color(70, 70, 70)
+                )
             }
         }
     }
 }
 
 @Composable
-fun RocketItem(rocket: Rocket) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = Color(60, 60, 60), // Background color of the card
-            contentColor = Color.LightGray // Text color
-        ),
-        shape = RoundedCornerShape(12.dp),  // Rounded corners for the card
-        elevation = CardDefaults.elevatedCardElevation(16.dp),  // Elevation for shadow effect
+fun LandingChip(text: String, backgroundColor: Color) {
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp) // Padding around the card
+            .size(width = 180.dp, height = 24.dp)
+            .background(color = backgroundColor, shape = RoundedCornerShape(8.dp))
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // Image taking up the top half of the card
-
-            if (rocket.flickrImages.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                ) {
-                    val painter = // You can add additional settings here if needed
-                        rememberAsyncImagePainter(
-                            ImageRequest.Builder(LocalContext.current)
-                                .data(data = rocket.flickrImages[0]).apply(block = fun ImageRequest.Builder.() {
-                                    // You can add additional settings here if needed
-                                }).build()
-                        )
-                    Image(
-                        painter = painter,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop // Scale the image to fill the box
-                    )
-                }
-            }
-
-            // Details taking up the bottom half of the card
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp) // Padding inside the card for text
-            ) {
-                Text(
-                    text = rocket.name,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = "Height: ${rocket.height.meters} meters",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = rocket.description,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = Bold,
+            maxLines = 1,
+            overflow = Ellipsis
+        )
     }
 }
 
@@ -121,7 +158,7 @@ fun NotFoundItem(message: String){
         elevation = CardDefaults.elevatedCardElevation(16.dp),  // Elevation for shadow effect
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // Padding around the card
+            .padding(32.dp) // Padding around the card
     ) {
         Text(message,modifier = Modifier.padding(8.dp).align(Alignment.CenterHorizontally))
     }

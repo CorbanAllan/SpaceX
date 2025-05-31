@@ -1,38 +1,46 @@
 package com.example.spacex.viewmodel
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.spacex.data.model.Launch
-import com.example.spacex.data.network.RetrofitInstance
+import com.example.spacex.data.network.SpaceDevsClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class LaunchViewModel : ViewModel() {
-    // Use StateFlow for observing the list of launches in Compose
-    private val _launches = MutableStateFlow<List<Launch>>(emptyList()) // Initially empty list
-    val launches: StateFlow<List<Launch>> = _launches // Expose as StateFlow to be observed
+    private val _launches = MutableStateFlow<List<Launch>>(emptyList())
+    val launches: StateFlow<List<Launch>> = _launches
 
-    init {
-        fetchLaunches()
-    }
-
-    private fun fetchLaunches() {
+    fun fetchLaunches(isUpcoming: Boolean) {
         viewModelScope.launch {
             try {
-                // Fetching 10 most recent launches from the SpaceX API
-                val response = RetrofitInstance.api.getLaunches()
+                val allLaunches = mutableListOf<Launch>()
+                var offset = 0
+                var hasNext = true
 
-                val sortedLaunches = response.sortedByDescending { it.date_utc }
-                val limitedLaunches = sortedLaunches.take(10)
-                // Updating the state with the fetched launches
-                _launches.value = limitedLaunches
+                while (hasNext) {
+                    val response = SpaceDevsClient.api.getSpaceXLaunches(
+                        offset = offset,
+                        ordering = if (isUpcoming) "net" else "-net",
+                        upcoming = isUpcoming
+                    )
+                    if (response.isSuccessful) {
+                        response.body()?.let { launchResponse ->
+                            allLaunches += launchResponse.results
+                            hasNext = launchResponse.next != null
+                            offset += 100
+                        }
+                    } else {
+                        Log.e("LaunchesViewModel", "API call failed: ${response.code()}")
+                        hasNext = false
+                    }
+                }
+
+                _launches.value = allLaunches
             } catch (e: Exception) {
-                // Handle any errors (e.g., log it or show a message to the user)
-                Log.e("LaunchViewModel", "Error fetching launches", e)
+                Log.e("LaunchesViewModel", "Failed to fetch launches", e)
             }
         }
     }

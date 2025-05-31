@@ -34,39 +34,39 @@ import com.example.spacex.presentation.screens.Screen
 
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            MaterialTheme {
-                Surface {
-                    AppContent()
-                }
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    setContent {
+        MaterialTheme {
+            Surface {
+                AppContent()
             }
         }
     }
+}
 
-    @Composable
-    fun Logo(){
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .padding(start = 15.dp, top = 40.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start)
-        {
-            Image(
-                painter = painterResource(id = R.drawable.spacex),
-                contentDescription = "SpaceX",
-                modifier = Modifier.size(200.dp)
-            )
-        }
+@Composable
+fun Logo(){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .padding(start = 15.dp, top = 40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start)
+    {
+        Image(
+            painter = painterResource(id = R.drawable.spacex),
+            contentDescription = "SpaceX",
+            modifier = Modifier.size(200.dp)
+        )
     }
+}
 
 
 @Composable
-    fun AppContent() {
+fun AppContent() {
         val navController = rememberNavController()
 
         Scaffold(
@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                 // Main content area
                 NavHost(navController, startDestination = Screen.Home.route) {
                     composable(Screen.Home.route) { HomeScreen() }
-                    composable(Screen.Rockets.route) { RocketListScreen() }
+                    composable(Screen.Rockets.route) { RocketListScreen(useTestData = true) }
                     composable(Screen.Launches.route) { LaunchesScreen() }
                 }
             }
