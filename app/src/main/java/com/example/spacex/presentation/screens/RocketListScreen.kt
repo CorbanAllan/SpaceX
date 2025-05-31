@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.spacex.data.model.LauncherConfig
 import com.example.spacex.data.model.RocketResponse
 import com.example.spacex.loadJsonFromAssets
+import com.example.spacex.presentation.components.LoadingIndicator
 import com.example.spacex.viewmodel.RocketsViewModel
 import com.google.gson.Gson
 
@@ -52,8 +53,6 @@ fun RocketListScreen(
 
     // Collect real data from ViewModel
     val rockets by viewModel.rockets.collectAsState()
-
-    // Choose which list to display
     val rocketListToDisplay = if (useTestData) testRockets else rockets
 
     if (rocketListToDisplay.isEmpty()) {
@@ -61,19 +60,24 @@ fun RocketListScreen(
         return
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(40, 40, 40))
-            .padding(4.dp)
-    ) {
-        items(rocketListToDisplay) { rocket ->
-            RocketItem(rocket)
-            HorizontalDivider(
-                color = Color(70, 70, 70),
-                thickness = 1.dp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+    if(rockets.isEmpty()){
+        LoadingIndicator()
+    }else {
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(40, 40, 40))
+                .padding(4.dp)
+        ) {
+            items(rocketListToDisplay) { rocket ->
+                RocketItem(rocket)
+                HorizontalDivider(
+                    color = Color(70, 70, 70),
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
         }
     }
 }

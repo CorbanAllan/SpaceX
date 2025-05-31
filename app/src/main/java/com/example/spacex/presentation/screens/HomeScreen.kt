@@ -39,6 +39,7 @@ import com.example.spacex.data.model.Article
 import com.example.spacex.viewmodel.NewsViewModel
 import androidx.core.net.toUri
 import com.example.spacex.data.model.UpcomingLaunch
+import com.example.spacex.presentation.components.LoadingIndicator
 import com.example.spacex.viewmodel.UpcomingLaunchViewModel
 import kotlinx.coroutines.delay
 import java.time.Duration
@@ -50,41 +51,47 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(viewModel: NewsViewModel = viewModel(), upcomingLaunchViewModel: UpcomingLaunchViewModel = viewModel()) {
     val launches by upcomingLaunchViewModel.launches.collectAsState()
     val articles by viewModel.newsArticles.collectAsState()
-    Box(modifier = Modifier.fillMaxSize().background(Color(40, 40, 40)).padding(16.dp)) {
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-        ) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                "Latest News",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
+
+    val isLoading = articles.isEmpty()
+    if (isLoading) {
+        LoadingIndicator()
+    }else {
+        Box(modifier = Modifier.fillMaxSize().background(Color(40, 40, 40)).padding(16.dp)) {
+            Column(
+                modifier = Modifier.fillMaxHeight(),
             ) {
-                if (articles.isNotEmpty()) {
-                    items(articles) { article ->
-                        NewsItem(article)
-                    }
-                } else {
-                    item {
-                        NotFoundItem("No News Found")
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Latest News",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    if (articles.isNotEmpty()) {
+                        items(articles) { article ->
+                            NewsItem(article)
+                        }
+                    } else {
+                        item {
+                            NotFoundItem("No News Found")
+                        }
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Upcoming Launch",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                UpcomingLaunchItem(launches)
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                "Upcoming Launch",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            UpcomingLaunchItem(launches)
         }
     }
 }

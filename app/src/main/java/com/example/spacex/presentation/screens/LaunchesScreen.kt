@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.spacex.CoilImage
 import com.example.spacex.data.model.Launch
+import com.example.spacex.presentation.components.LoadingIndicator
 import com.example.spacex.viewmodel.LaunchViewModel
 
 @Composable
@@ -32,11 +33,7 @@ fun LaunchesScreen() {
     val viewModel = remember { LaunchViewModel() }
     val launches by viewModel.launches.collectAsState()
     var isUpcoming by remember { mutableStateOf(true) }
-
-    // Load data based on selection
-    LaunchedEffect(isUpcoming) {
-        viewModel.fetchLaunches(isUpcoming)
-    }
+    val isLoading = launches.isEmpty()
 
     Column(
         modifier = Modifier
@@ -86,14 +83,21 @@ fun LaunchesScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LazyColumn {
-            if (launches.isNotEmpty()) {
-                items(launches) { launch -> LaunchItem(launch) }
-            } else {
-                item {
-                    NotFoundItem("Launches Not Found")
+    if (isLoading) {
+        LoadingIndicator()
+    }else {
+        // Load data based on selection
+        LaunchedEffect(isUpcoming) {
+            viewModel.fetchLaunches(isUpcoming)
+        }
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyColumn {
+                if (launches.isNotEmpty()) {
+                    items(launches) { launch -> LaunchItem(launch) }
+                } else {
+                    item {
+                        NotFoundItem("Launches Not Found")
+                    }
                 }
             }
         }
