@@ -49,6 +49,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(viewModel: NewsViewModel = viewModel(), upcomingLaunchViewModel: UpcomingLaunchViewModel = viewModel()) {
+
     val launches by upcomingLaunchViewModel.launches.collectAsState()
     val articles by viewModel.newsArticles.collectAsState()
 

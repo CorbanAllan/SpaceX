@@ -13,34 +13,45 @@ class LaunchViewModel : ViewModel() {
     private val _launches = MutableStateFlow<List<Launch>>(emptyList())
     val launches: StateFlow<List<Launch>> = _launches
 
-    fun fetchLaunches(isUpcoming: Boolean) {
+    private var offset = 0
+    private var isLoadingMore = false
+    private var hasNext = true
+    private var currentFilterUpcoming = true
+
+    fun fetchInitialLaunches(isUpcoming: Boolean) {
+        offset = 0
+        hasNext = true
+        currentFilterUpcoming = isUpcoming
+        _launches.value = emptyList()
+        fetchMoreLaunches()
+    }
+
+    fun fetchMoreLaunches() {
+        if (isLoadingMore || !hasNext) return
+        isLoadingMore = true
+
         viewModelScope.launch {
             try {
-                val allLaunches = mutableListOf<Launch>()
-                var offset = 0
-                var hasNext = true
-
-                while (hasNext) {
-                    val response = SpaceDevsClient.api.getSpaceXLaunches(
-                        offset = offset,
-                        ordering = if (isUpcoming) "net" else "-net",
-                        upcoming = isUpcoming
-                    )
-                    if (response.isSuccessful) {
-                        response.body()?.let { launchResponse ->
-                            allLaunches += launchResponse.results
-                            hasNext = launchResponse.next != null
-                            offset += 100
-                        }
-                    } else {
-                        Log.e("LaunchesViewModel", "API call failed: ${response.code()}")
-                        hasNext = false
+                val response = SpaceDevsClient.api.getSpaceXLaunches(
+                    offset = offset,
+                    ordering = if (currentFilterUpcoming) "net" else "-net",
+                    upcoming = currentFilterUpcoming
+                )
+                if (response.isSuccessful) {
+                    response.body()?.let { launchResponse ->
+                        _launches.value += launchResponse.results
+                        hasNext = launchResponse.next != null
+                        offset += 100
                     }
+                } else {
+                    Log.e("LaunchesViewModel", "API call failed: ${response.code()}")
+                    hasNext = false
                 }
-
-                _launches.value = allLaunches
             } catch (e: Exception) {
                 Log.e("LaunchesViewModel", "Failed to fetch launches", e)
+                hasNext = false
+            } finally {
+                isLoadingMore = false
             }
         }
     }

@@ -74,5 +74,5 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.converter.gson)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.coil.compose.v240)
 }

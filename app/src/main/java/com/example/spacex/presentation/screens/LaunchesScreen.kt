@@ -27,82 +27,82 @@ import com.example.spacex.CoilImage
 import com.example.spacex.data.model.Launch
 import com.example.spacex.presentation.components.LoadingIndicator
 import com.example.spacex.viewmodel.LaunchViewModel
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.snapshotFlow
 
 @Composable
-fun LaunchesScreen() {
-    val viewModel = remember { LaunchViewModel() }
+fun LaunchesScreen(viewModel: LaunchViewModel = viewModel()) {
     val launches by viewModel.launches.collectAsState()
-    var isUpcoming by remember { mutableStateOf(true) }
+    val listState = rememberLazyListState()
     val isLoading = launches.isEmpty()
+    var selectedTab by remember { mutableStateOf(true) } // true = Upcoming, false = Past
+
+    // Scroll detection for pagination
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { index ->
+                if (index == launches.lastIndex) {
+                    viewModel.fetchMoreLaunches()
+                }
+            }
+    }
 
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
             .background(Color(40, 40, 40))
-            .padding(16.dp)
     ) {
-        // Toggle Buttons Row
         Row(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .height(48.dp)
                 .background(Color(40, 40, 40))
-                .border(
-                    width = 1.dp,
-                    color = Color.Gray.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(8.dp)
-                )
+                .border(BorderStroke(1.dp, Color.Gray)),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(
-                onClick = { isUpcoming = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(40, 40, 40)),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                elevation = null,
+            TextButton(
+                onClick = {
+                    selectedTab = true
+                    viewModel.fetchInitialLaunches(true)
+                },
+                modifier = Modifier.weight(1f)
             ) {
-                Text("Upcoming", color = Color.White)
+                Text("Upcoming", color = if (selectedTab) Color.White else Color.Gray)
             }
-
             Box(
-                modifier = Modifier
+                Modifier
                     .width(1.dp)
                     .fillMaxHeight()
-                    .background(Color.Gray.copy(alpha = 0.3f))
+                    .background(Color.Gray)
             )
-
-            Button(
-                onClick = { isUpcoming = false },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(40, 40, 40)),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                elevation = null,
+            TextButton(
+                onClick = {
+                    selectedTab = false
+                    viewModel.fetchInitialLaunches(false)
+                },
+                modifier = Modifier.weight(1f)
             ) {
-                Text("Past", color = Color.White)
+                Text("Past", color = if (!selectedTab) Color.White else Color.Gray)
             }
         }
 
-    if (isLoading) {
-        LoadingIndicator()
-    }else {
-        // Load data based on selection
-        LaunchedEffect(isUpcoming) {
-            viewModel.fetchLaunches(isUpcoming)
-        }
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn {
-                if (launches.isNotEmpty()) {
-                    items(launches) { launch -> LaunchItem(launch) }
-                } else {
-                    item {
-                        NotFoundItem("Launches Not Found")
-                    }
+        if (isLoading) {
+            LoadingIndicator(modifier = Modifier.fillMaxSize())
+        } else {
+            LazyColumn(state = listState) {
+                items(launches) { launch ->
+                    LaunchItem(launch)
+                }
+                item {
+                    Spacer(modifier = Modifier.height(60.dp)) // bottom padding
                 }
             }
         }
     }
 }
+
 
 
 @Composable
